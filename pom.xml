@@ -31,7 +31,8 @@
 
     <scm>
         <connection>scm:git:https://github.com/phaneesh/vertx-service-discovery-backend-ranger.git</connection>
-        <developerConnection>scm:git:https://github.com/phaneesh/vertx-service-discovery-backend-ranger.git</developerConnection>
+        <developerConnection>scm:git:https://github.com/phaneesh/vertx-service-discovery-backend-ranger.git
+        </developerConnection>
         <tag>HEAD</tag>
         <url>https://github.com/phaneesh/vertx-service-discovery-backend-ranger</url>
     </scm>
@@ -51,7 +52,6 @@
             <url>https://clojars.org/repo</url>
         </repository>
     </repositories>
-
 
 
     <dependencies>
@@ -174,4 +174,18 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

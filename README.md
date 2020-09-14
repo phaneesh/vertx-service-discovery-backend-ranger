@@ -1,5 +1,21 @@
 # Vert.x Ranger Service Discovery Module
 
+### Maven
+```xml
+    <repositories>
+        <repository>
+            <id>clojars</id>
+            <name>Clojars repository</name>
+            <url>https://clojars.org/repo</url>
+        </repository>
+    </repositories>
+
+    <dependency>
+        <groupId>io.raven.vertx</groupId>
+        <artifactId>vertx-service-discovery-backend-ranger</artifactId>
+        <version>3.9.1-1</version>
+    </dependency>
+```
 ### Usage Example
 ```java
 JsonObject config = new JsonObject()

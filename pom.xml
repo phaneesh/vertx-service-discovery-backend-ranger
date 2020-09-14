@@ -21,6 +21,39 @@
         <curator.version>4.0.1</curator.version>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>clojars</id>
+            <name>Clojars repository</name>
+            <url>https://clojars.org/repo</url>
+        </repository>
+    </distributionManagement>
+
+    <scm>
+        <connection>scm:git:https://github.com/phaneesh/vertx-service-discovery-backend-ranger.git</connection>
+        <developerConnection>scm:git:https://github.com/phaneesh/vertx-service-discovery-backend-ranger.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/phaneesh/vertx-service-discovery-backend-ranger</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>phaneesh</id>
+            <name>Phaneesh Nagaraja</name>
+            <email>phaneesh.n@gmail.com</email>
+        </developer>
+    </developers>
+
+    <repositories>
+        <repository>
+            <id>clojars</id>
+            <name>Clojars repository</name>
+            <url>https://clojars.org/repo</url>
+        </repository>
+    </repositories>
+
+
+
     <dependencies>
         <dependency>
             <groupId>io.vertx</groupId>

@@ -1,7 +1,6 @@
 package io.vertx.servicediscovery.backend.ranger;
 
 
-import com.google.common.collect.ImmutableMap;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Context;
@@ -11,7 +10,6 @@ import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.servicediscovery.Record;
-import io.vertx.servicediscovery.Status;
 import io.vertx.servicediscovery.spi.ServiceDiscoveryBackend;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
@@ -27,7 +25,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -50,10 +47,6 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
 
   private Vertx vertx;
 
-  private JsonObject nodeData;
-
-  private Map<String, String> shardInfo;
-
   private ConnectionState connectionState = ConnectionState.LOST;
 
   @Override
@@ -65,14 +58,6 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
     this.basePath = namespace.startsWith("/") ? this.namespace : "/" + this.namespace;
     this.basePath = this.basePath + "/" + this.service;
     this.connectionTimeoutMs = config.getInteger("connectionTimeoutMs", 1000);
-    this.nodeData = new JsonObject();
-    this.nodeData.put("host", config.getString("host"));
-    this.nodeData.put("port", config.getInteger("port"));
-    this.nodeData.put("healthcheckStatus", true);
-    this.nodeData.put("nodeData", shardInfo);
-    this.shardInfo = ImmutableMap.<String, String>builder()
-        .put("environment", config.getString("env"))
-        .build();
     this.client = CuratorFrameworkFactory.builder()
         .connectString(config.getString("zkConnectionString"))
         .connectionTimeoutMs(config.getInteger("connectionTimeoutMs", 1000))
@@ -87,11 +72,9 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
       resultHandler.handle(Future.failedFuture("The record has already been registered"));
       return;
     }
-    nodeData.put("lastUpdatedTimeStamp", System.currentTimeMillis());
     record.setRegistration(registrationId);
-    record.setMetadata(nodeData);
-    record.setStatus(Status.UP);
-    record.setName(service);
+    JsonObject nodeData = record.toJson();
+    nodeData.put("lastUpdatedTimeStamp", System.currentTimeMillis());
     String content = record.toJson().encode();
     Context context = Vertx.currentContext();
     ensureConnected(x -> {

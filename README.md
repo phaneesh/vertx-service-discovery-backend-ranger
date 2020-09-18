@@ -27,7 +27,7 @@ JsonObject config = new JsonObject()
         .put("service", "my-service")
         .put("baseSleepTimeBetweenRetries",  10)
         .put("connectionTimeoutMs",  1000));
-ServiceDiscoverOptions options = new ServiceDiscoveryOptions()
-                                        .setBackendConfiguration(config);
-ServiceDiscovery.create(vertx, options);
+RangerBackendServicePublisher.publish(vertx, config, record -> {
+  ....
+});
 ```

@@ -9,6 +9,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.spi.ServiceDiscoveryBackend;
 import org.apache.curator.framework.CuratorFramework;
@@ -33,6 +35,8 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
 
   private static final Charset CHARSET = StandardCharsets.UTF_8;
 
+  private static final Logger log = LoggerFactory.getLogger(RangerBackendService.class);
+
   private String registrationId;
 
   private String namespace;
@@ -42,6 +46,8 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
   private String basePath;
 
   private int connectionTimeoutMs;
+
+  private int refreshTimeMs;
 
   private CuratorFramework client;
 
@@ -58,6 +64,7 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
     this.basePath = namespace.startsWith("/") ? this.namespace : "/" + this.namespace;
     this.basePath = this.basePath + "/" + this.service;
     this.connectionTimeoutMs = config.getInteger("connectionTimeoutMs", 1000);
+    this.refreshTimeMs = config.getInteger("refreshTimeMs", 5000);
     this.client = CuratorFrameworkFactory.builder()
         .connectString(config.getString("zkConnectionString"))
         .connectionTimeoutMs(config.getInteger("connectionTimeoutMs", 1000))
@@ -86,7 +93,10 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
               .creatingParentsIfNeeded()
               .withMode(CreateMode.EPHEMERAL)
               .inBackground((curatorFramework, curatorEvent)
-                  -> callback(context, record, resultHandler, curatorEvent))
+                  -> {
+                        callback(context, record, resultHandler, curatorEvent);
+                        startBackgroundRefresh();
+                    })
               .withUnhandledErrorListener((s, throwable)
                   -> resultHandler.handle(Future.failedFuture(throwable)))
               .forPath(getPath(record.getRegistration()), content.getBytes(CHARSET));
@@ -324,6 +334,26 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
           handler.handle(null);
         }
       }
+    });
+  }
+
+  private void startBackgroundRefresh() {
+    this.vertx.setPeriodic(refreshTimeMs, event -> {
+      getRecord(registrationId , recordAsyncResult -> {
+        if(recordAsyncResult.succeeded()) {
+          update(recordAsyncResult.result(), updateAsyncResult -> {
+            if(updateAsyncResult.succeeded()) {
+              if(log.isDebugEnabled()) {
+                log.debug("Updated ranger service record with registration: " +registrationId);
+              }
+            } else {
+              log.warn("Failed to update ranger service record with registration: " + registrationId +" | Message: " +updateAsyncResult.cause().getMessage());
+            }
+          });
+        } else {
+          log.warn("Failed to fetch ranger service record with registration: " + registrationId +" | Message: " +recordAsyncResult.cause().getMessage());
+        }
+      });
     });
   }
 }

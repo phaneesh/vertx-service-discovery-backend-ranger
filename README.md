@@ -26,6 +26,7 @@ JsonObject config = new JsonObject()
         .put("namespace", "test")
         .put("service", "my-service")
         .put("baseSleepTimeBetweenRetries",  10)
+        .put("refreshTimeMs",  5000)
         .put("connectionTimeoutMs",  1000));
 RangerBackendServicePublisher.publish(vertx, config, record -> {
   ....

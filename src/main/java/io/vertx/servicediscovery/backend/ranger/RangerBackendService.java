@@ -23,6 +23,7 @@ import org.apache.curator.retry.RetryForever;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 
+import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -38,10 +39,6 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
   private static final Logger log = LoggerFactory.getLogger(RangerBackendService.class);
 
   private String registrationId;
-
-  private String namespace;
-
-  private String service;
 
   private String basePath;
 
@@ -59,10 +56,9 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
   public void init(Vertx vertx, JsonObject config) {
     this.vertx = vertx;
     this.registrationId = config.getString("host") + ":" + config.getInteger("port");
-    this.namespace = config.getString("namespace");
-    this.service = config.getString("service");
-    this.basePath = namespace.startsWith("/") ? this.namespace : "/" + this.namespace;
-    this.basePath = this.basePath + "/" + this.service;
+    final String namespace = config.getString("namespace");
+    this.basePath = namespace.startsWith(File.separator) ? namespace : File.separator + namespace;
+    this.basePath = this.basePath + File.separator + config.getString("service");
     this.connectionTimeoutMs = config.getInteger("connectionTimeoutMs", 1000);
     this.refreshTimeMs = config.getInteger("refreshTimeMs", 5000);
     this.client = CuratorFrameworkFactory.builder()
@@ -308,7 +304,7 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
   }
 
   private String getPath(String registration) {
-    return basePath + "/" + registration;
+    return basePath + File.separator + registration;
 
   }
 
@@ -338,7 +334,7 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
   }
 
   private void startBackgroundRefresh() {
-    this.vertx.setPeriodic(refreshTimeMs, event -> {
+    this.vertx.setPeriodic(refreshTimeMs, event ->
       getRecord(registrationId , recordAsyncResult -> {
         if(recordAsyncResult.succeeded()) {
           update(recordAsyncResult.result(), updateAsyncResult -> {
@@ -353,7 +349,7 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
         } else {
           log.warn("Failed to fetch ranger service record with registration: " + registrationId +" | Message: " +recordAsyncResult.cause().getMessage());
         }
-      });
-    });
+      })
+    );
   }
 }

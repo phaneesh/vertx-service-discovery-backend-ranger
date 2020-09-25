@@ -22,7 +22,7 @@ public class RangerBackendServicePublisher {
     JsonObject nodeData = new JsonObject();
     nodeData.put("host", config.getString("host"));
     nodeData.put("port", config.getInteger("port"));
-    nodeData.put("healthcheckStatus", true);
+    nodeData.put("healthcheckStatus", "healthy");
     nodeData.put("nodeData", shardInfo);
     Record record = new Record();
     record.setMetadata(nodeData);

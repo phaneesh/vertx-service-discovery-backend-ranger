@@ -46,6 +46,8 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
 
   private int refreshTimeMs;
 
+  private String service;
+
   private CuratorFramework client;
 
   private Vertx vertx;
@@ -59,6 +61,7 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
     final String namespace = config.getString("namespace");
     this.basePath = namespace.startsWith(File.separator) ? namespace : File.separator + namespace;
     this.basePath = this.basePath + File.separator + config.getString("service");
+    this.service = config.getString("service");
     this.connectionTimeoutMs = config.getInteger("connectionTimeoutMs", 1000);
     this.refreshTimeMs = config.getInteger("refreshTimeMs", 5000);
     this.client = CuratorFrameworkFactory.builder()
@@ -76,9 +79,11 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
       return;
     }
     record.setRegistration(registrationId);
-    JsonObject nodeData = record.toJson();
+    record.setName(service);
+    JsonObject nodeData = record.getMetadata();
     nodeData.put("lastUpdatedTimeStamp", System.currentTimeMillis());
-    String content = record.toJson().encode();
+    record.setMetadata(nodeData);
+    String content = nodeData.encode();
     Context context = Vertx.currentContext();
     ensureConnected(x -> {
       if (x.failed()) {
@@ -127,7 +132,6 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
                   .deletingChildrenIfNeeded()
                   .inBackground((curatorFramework, curatorEvent)
                       -> callback(context, record, resultHandler, curatorEvent))
-
                   .withUnhandledErrorListener((s, throwable)
                       -> resultHandler.handle(Future.failedFuture(throwable)))
 
@@ -150,7 +154,7 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
         resultHandler.handle(Future.failedFuture(x.cause()));
       } else {
         try {
-          JsonObject nodeData = record.toJson();
+          JsonObject nodeData = record.getMetadata();
           nodeData.put("lastUpdatedTimeStamp", System.currentTimeMillis());
           client.setData()
               .inBackground((framework, event)
@@ -230,7 +234,11 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
                 if (curatorEvent.getResultCode() == KeeperException.Code.OK.intValue()) {
                   JsonObject json
                       = new JsonObject(new String(curatorEvent.getData(), CHARSET));
-                  handler.handle(Future.succeededFuture(new Record(json)));
+                  Record record = new Record();
+                  record.setName(service);
+                  record.setRegistration(registrationId);
+                  record.setMetadata(json);
+                  handler.handle(Future.succeededFuture(record));
                 } else if (curatorEvent.getResultCode() == KeeperException.Code.NONODE.intValue()) {
                   handler.handle(Future.succeededFuture(null));
                 } else {
@@ -320,7 +328,11 @@ public class RangerBackendService implements ServiceDiscoveryBackend, Connection
                 if (curatorEvent.getResultCode() == KeeperException.Code.OK.intValue()) {
                   JsonObject json
                       = new JsonObject(new String(curatorEvent.getData(), CHARSET));
-                  handler.handle(new Record(json));
+                  Record record = new Record();
+                  record.setName(service);
+                  record.setRegistration(registrationId);
+                  record.setMetadata(json);
+                  handler.handle(record);
                 } else {
                   handler.handle(null);
                 }

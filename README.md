@@ -13,7 +13,7 @@
     <dependency>
         <groupId>io.raven.vertx</groupId>
         <artifactId>vertx-service-discovery-backend-ranger</artifactId>
-        <version>3.9.1-4</version>
+        <version>3.9.1-5</version>
     </dependency>
 ```
 ### Usage Example

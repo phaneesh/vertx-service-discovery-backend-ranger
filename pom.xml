@@ -6,7 +6,7 @@
     <groupId>io.raven.vertx</groupId>
     <artifactId>vertx-service-discovery-backend-ranger</artifactId>
     <packaging>jar</packaging>
-    <version>3.9.1-6</version>
+    <version>3.9.1-7</version>
     <name>vertx-service-discovery-backend-ranger</name>
     <url>http://maven.apache.org</url>
 
@@ -18,7 +18,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <vertx.version>3.9.1</vertx.version>
         <lombok.version>1.18.12</lombok.version>
-        <curator.version>4.0.1</curator.version>
+        <curator.version>4.2.0</curator.version>
     </properties>
 
     <distributionManagement>
